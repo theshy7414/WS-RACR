@@ -1,0 +1,77 @@
+{
+  "scenario_id": "answer_tool_location_01",
+  "branch": "answer_question",
+  "description": "Human asks a pure spatial query about a tool's location. Robot should retrieve the answer from the dynamic KG (spatial relations) — no physical action required.",
+
+  "assembly_context": {
+    "step_class": "align_pi_on_bracket",
+    "step_index": 4,
+    "step_description": "Align pi on bracket (step 5 of 9) — hex_wrench not needed at this step, hence not actively being used"
+  },
+
+  "world_state_summary": {
+    "step_class": "align_pi_on_bracket",
+    "step_confidence": 0.80,
+    "robot": {
+      "is_holding": false,
+      "held_object": null,
+      "gripper_open": true
+    },
+    "objects": {
+      "hex_wrench_1": {
+        "object_type": "hex_wrench",
+        "visibility": "visible",
+        "confidence": 0.81,
+        "location_stable": true,
+        "position_world_mm": [330.0, -170.0, 158.0]
+      },
+      "platform_1": {
+        "object_type": "platform",
+        "visibility": "visible",
+        "confidence": 0.87,
+        "location_stable": true,
+        "position_world_mm": [320.0, -180.0, 150.0]
+      }
+    },
+    "kg_relations": [
+      {
+        "relation_type": "tool_near",
+        "subject": "hex_wrench_1",
+        "object": "platform_1",
+        "distance_mm": 22.4,
+        "direction": "right"
+      }
+    ]
+  },
+
+  "human_utterance": "六角扳手在哪裡？",
+
+  "expected": {
+    "routing": "_handle_query_via_voice_query()",
+    "note": "'在哪裡' matches _is_query_intent() pattern set → early routing, no LLM skill planning needed",
+    "llm_decision": {
+      "override_skill": null,
+      "override_target": null,
+      "collaboration_policy": "answer_question",
+      "clarification_text": "六角扳手在平台旁邊，靠近桌子右側。"
+    },
+    "waypoints": [],
+    "robot_verbal_output": "六角扳手在平台旁邊，靠近桌子右側。",
+    "kg_subgraph_used": {
+      "query_entity": "hex_wrench_1",
+      "k_hops": 2,
+      "retrieved_relations": ["tool_near(hex_wrench_1, platform_1)"]
+    }
+  },
+
+  "evaluation_criteria": {
+    "routing_correct": "must route via _is_query_intent()=True → _handle_query_via_voice_query()",
+    "policy_correct": "collaboration_policy must be 'answer_question'",
+    "kg_grounded": "answer must be derived from KG spatial relations, NOT hallucinated",
+    "no_physical_action": "robot must not plan or execute any waypoints",
+    "interaction_recorded": "_record_interaction() must be called to log this Q&A in InteractionLog",
+    "thesis_relevance": "Demonstrates ANSWER policy: robot grounds spatial query answer in dynamic KG rather than LLM hallucination"
+  },
+
+  "thesis_claim": "Spatial queries are answered by retrieving k-hop subgraphs from the dynamic KG, grounding the robot's response in real-time perception data rather than LLM parametric memory."
+}

@@ -1,0 +1,362 @@
+{
+  "system_overview": {
+    "title": "人機協作組裝系統",
+    "purpose": "使用雙視角感知、步驟識別、意圖檢測和LLM+RAG實現人機協作組裝任務",
+    "components": [
+      "platform", "4 cylinders", "bracket", "pi-shaped component",
+      "screws (small & big)", "nuts", "hex wrench"
+    ]
+  },
+  
+  "robot_assistance_types": [
+    {
+      "type": "PREPARE_TOOL",
+      "description": "準備工具給操作員",
+      "example": "準備六角扳手用於鎖螺絲",
+      "phase": "任何階段"
+    },
+    {
+      "type": "HOLD_PART",
+      "description": "固定零件讓操作員組裝",
+      "example": "固定平台底部讓操作員鎖螺絲",
+      "phase": "phase_1, phase_3"
+    },
+    {
+      "type": "STABILIZE",
+      "description": "穩定零件防止移動",
+      "example": "穩定支架讓操作員安裝螺絲",
+      "phase": "phase_2, phase_3"
+    },
+    {
+      "type": "ASSIST_ALIGNMENT",
+      "description": "協助對齊零件",
+      "example": "協助對齊支架到平台",
+      "phase": "phase_2, phase_3"
+    },
+    {
+      "type": "EMERGENCY_STOP",
+      "description": "緊急停止所有動作",
+      "trigger": "操作員做出停止手勢",
+      "priority": "最高優先級"
+    }
+  ],
+  
+  "human_gestures": [
+    {
+      "gesture": "idle",
+      "meaning": "中性狀態，無特殊意圖",
+      "robot_action": "繼續當前任務或待命"
+    },
+    {
+      "gesture": "stop",
+      "meaning": "緊急停止手勢",
+      "robot_action": "立即停止所有動作",
+      "threshold": "持續5幀以上，信心值>0.7"
+    },
+    {
+      "gesture": "receive",
+      "meaning": "準備接收物品",
+      "robot_action": "將工具或零件遞給操作員",
+      "threshold": "持續5幀以上，信心值>0.7"
+    },
+    {
+      "gesture": "pointing",
+      "meaning": "指向特定物件",
+      "robot_action": "識別指向目標，準備協助該物件",
+      "threshold": "持續5幀以上，信心值>0.7"
+    }
+  ],
+  
+  "assembly_steps": [
+    {
+      "step_id": 1,
+      "name": "place_platform",
+      "description": "將平台放置在工作區",
+      "phase": 1,
+      "required_objects": ["platform"],
+      "robot_help": "可視覺確認平台位置"
+    },
+    {
+      "step_id": 2,
+      "name": "insert_cylinder_under_platform",
+      "description": "在平台底部插入圓柱（共4個）",
+      "phase": 1,
+      "required_objects": ["platform", "cylinder"],
+      "robot_help": "可協助固定平台，視覺確認插入狀態"
+    },
+    {
+      "step_id": 3,
+      "name": "tighten_small_screw_under_platform",
+      "description": "鎖緊平台底部小螺絲（共4個）",
+      "phase": 1,
+      "required_objects": ["screw_small", "hex_wrench"],
+      "robot_help": "固定平台、準備扳手、視覺確認鎖緊"
+    },
+    {
+      "step_id": 4,
+      "name": "place_bracket_on_table",
+      "description": "將支架放在工作台上",
+      "phase": 2,
+      "required_objects": ["bracket"],
+      "robot_help": "視覺確認支架位置"
+    },
+    {
+      "step_id": 5,
+      "name": "align_pi_on_bracket",
+      "description": "將Pi零件對齊到支架上",
+      "phase": 2,
+      "required_objects": ["bracket", "pi"],
+      "robot_help": "固定支架、協助對齊Pi零件"
+    },
+    {
+      "step_id": 6,
+      "name": "insert_upper_big_screw",
+      "description": "插入並鎖緊上方大螺絲",
+      "phase": 2,
+      "required_objects": ["screw_big", "nut"],
+      "robot_help": "固定支架、視覺確認螺絲安裝"
+    },
+    {
+      "step_id": 7,
+      "name": "align_bracket_to_platform",
+      "description": "將支架對齊到平台",
+      "phase": 3,
+      "required_objects": ["platform", "bracket"],
+      "robot_help": "協助對齊、固定平台或支架"
+    },
+    {
+      "step_id": 8,
+      "name": "insert_lower_big_screw",
+      "description": "插入並鎖緊下方大螺絲（共2個）",
+      "phase": 3,
+      "required_objects": ["screw_big", "nut"],
+      "robot_help": "固定結構、視覺確認螺絲安裝"
+    },
+    {
+      "step_id": 9,
+      "name": "idle",
+      "description": "空閒狀態，未進行組裝",
+      "phase": 0,
+      "required_objects": [],
+      "robot_help": "待命"
+    }
+  ],
+  
+  "object_categories": [
+    {"name": "platform", "description": "組裝基座平台", "quantity": 1},
+    {"name": "cylinder", "description": "圓柱支撐柱", "quantity": 4},
+    {"name": "bracket", "description": "支架", "quantity": 1},
+    {"name": "pi", "description": "Pi形狀零件", "quantity": 1},
+    {"name": "screw_small", "description": "小螺絲（平台用）", "quantity": 4},
+    {"name": "screw_big", "description": "大螺絲（支架用）", "quantity": 2},
+    {"name": "nut", "description": "螺帽", "quantity": 2},
+    {"name": "hex_wrench", "description": "六角扳手", "quantity": 1}
+  ],
+  
+  "robot_skills": [
+    {
+      "skill": "MOVE_TO_POSE",
+      "description": "移動到指定位姿",
+      "parameters": ["pose (x, y, z, roll, pitch, yaw)"]
+    },
+    {
+      "skill": "GRASP",
+      "description": "抓取物件",
+      "parameters": ["object_name"],
+      "safety": "檢查夾爪力道"
+    },
+    {
+      "skill": "PLACE",
+      "description": "放置物件",
+      "parameters": ["object_name", "target_pose"]
+    },
+    {
+      "skill": "HOLD",
+      "description": "固定物件不移動",
+      "parameters": ["object_name"],
+      "usage": "讓操作員進行組裝"
+    },
+    {
+      "skill": "ASSIST_ALIGNMENT",
+      "description": "協助對齊零件",
+      "parameters": ["object_name"],
+      "usage": "精確定位"
+    },
+    {
+      "skill": "PREPARE_TOOL",
+      "description": "準備工具",
+      "parameters": ["tool_name"],
+      "usage": "遞給操作員"
+    },
+    {
+      "skill": "STABILIZE",
+      "description": "穩定零件",
+      "parameters": ["object_name"],
+      "usage": "防止組裝時移動"
+    },
+    {
+      "skill": "STOP_IMMEDIATELY",
+      "description": "立即停止",
+      "parameters": [],
+      "priority": "最高"
+    }
+  ],
+  
+  "safety_rules": [
+    {
+      "rule": "檢測到停止手勢時立即停止",
+      "priority": "critical",
+      "action": "EMERGENCY_STOP"
+    },
+    {
+      "rule": "機器人速度不超過安全限制",
+      "priority": "high",
+      "parameters": "force & torque limits"
+    },
+    {
+      "rule": "保持與操作員的安全距離",
+      "priority": "high",
+      "parameters": "collision boundaries"
+    },
+    {
+      "rule": "執行動作前檢查操作員位置",
+      "priority": "high",
+      "method": "human proximity detection"
+    },
+    {
+      "rule": "抓取物件時控制夾爪力道",
+      "priority": "medium",
+      "method": "force feedback"
+    }
+  ],
+  
+  "workflow_phases": [
+    {
+      "phase": 1,
+      "name": "assemble_platform_base",
+      "description": "組裝平台底座",
+      "steps": ["place_platform", "insert_cylinder (×4)", "tighten_small_screw (×4)"],
+      "required_parts": ["platform", "cylinder×4", "screw_small×4", "hex_wrench"],
+      "estimated_time_minutes": 8
+    },
+    {
+      "phase": 2,
+      "name": "assemble_bracket_pi",
+      "description": "組裝支架與Pi零件",
+      "steps": ["place_bracket", "align_pi", "insert_upper_big_screw"],
+      "required_parts": ["bracket", "pi", "screw_big×1", "nut×1"],
+      "estimated_time_minutes": 5
+    },
+    {
+      "phase": 3,
+      "name": "assemble_final_structure",
+      "description": "組裝最終結構",
+      "steps": ["align_bracket_to_platform", "insert_lower_big_screw (×2)"],
+      "required_parts": ["screw_big×2", "nut×2"],
+      "estimated_time_minutes": 4
+    }
+  ],
+  
+  "system_capabilities": [
+    {
+      "capability": "步驟識別",
+      "description": "使用TSM+ResNet-18識別當前組裝步驟",
+      "accuracy": "實時識別，16幀輸入",
+      "status": "已實現"
+    },
+    {
+      "capability": "物件檢測",
+      "description": "使用YOLOv8-seg檢測工件和工具",
+      "objects": 8,
+      "status": "已實現"
+    },
+    {
+      "capability": "手勢識別",
+      "description": "使用MediaPipe Hands識別操作員手勢",
+      "gestures": 4,
+      "status": "已實現"
+    },
+    {
+      "capability": "手指指向檢測",
+      "description": "雙相機系統檢測操作員指向的物件",
+      "method": "射線追蹤",
+      "status": "已實現"
+    },
+    {
+      "capability": "世界狀態建構",
+      "description": "整合所有感知信息為結構化JSON",
+      "status": "已實現"
+    },
+    {
+      "capability": "LLM推理",
+      "description": "基於世界狀態和SOP知識庫進行任務推理",
+      "method": "RAG檢索 + LLM",
+      "status": "已實現"
+    },
+    {
+      "capability": "機器人控制",
+      "description": "使用MoveIt2和TM5 API執行高階技能",
+      "status": "部分實現"
+    }
+  ],
+  
+  "common_scenarios": [
+    {
+      "scenario": "操作員需要扳手",
+      "detection": "步驟識別：tighten_small_screw",
+      "robot_action": "PREPARE_TOOL(hex_wrench)",
+      "timing": "在操作員需要之前準備好"
+    },
+    {
+      "scenario": "操作員鎖平台底部螺絲",
+      "detection": "步驟：tighten_small_screw + 平台存在",
+      "robot_action": "HOLD(platform)",
+      "reason": "固定平台讓操作員鎖緊螺絲"
+    },
+    {
+      "scenario": "操作員對齊支架到平台",
+      "detection": "步驟：align_bracket_to_platform",
+      "robot_action": "ASSIST_ALIGNMENT(bracket)",
+      "reason": "協助精確對齊"
+    },
+    {
+      "scenario": "操作員做出停止手勢",
+      "detection": "手勢：stop，持續5幀以上",
+      "robot_action": "EMERGENCY_STOP",
+      "priority": "最高優先級，立即執行"
+    },
+    {
+      "scenario": "操作員指向圓柱",
+      "detection": "手勢：pointing + 指向物件：cylinder",
+      "robot_action": "GRASP(cylinder) 或 視覺確認該圓柱",
+      "reason": "操作員可能需要該圓柱"
+    }
+  ],
+  
+  "error_handling": [
+    {
+      "error": "步驟識別信心值過低",
+      "threshold": "< 0.6",
+      "action": "使用前一步驟 + 物件檢測推斷",
+      "fallback": "請求操作員確認"
+    },
+    {
+      "error": "物件未檢測到",
+      "condition": "SOP要求的物件不在視野",
+      "action": "提醒操作員準備該物件",
+      "robot_action": "暫停協助直到物件出現"
+    },
+    {
+      "error": "手勢信心值過低",
+      "threshold": "< 0.7",
+      "action": "不觸發動作，繼續觀察",
+      "safety": "避免誤判造成危險"
+    },
+    {
+      "error": "機器人技能執行失敗",
+      "examples": "抓取失敗、路徑規劃失敗",
+      "action": "記錄錯誤 + 通知操作員",
+      "retry": "根據錯誤類型決定是否重試"
+    }
+  ]
+}

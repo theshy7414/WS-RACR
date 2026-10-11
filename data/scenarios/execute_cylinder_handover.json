@@ -1,0 +1,66 @@
+{
+  "scenario_id": "execute_cylinder_handover_01",
+  "branch": "execute",
+  "description": "Human explicitly requests the robot to fetch a cylinder during the insert-cylinder assembly step. World state confirms feasibility: object is visible and robot hand is empty.",
+
+  "assembly_context": {
+    "step_class": "insert_cylinder_under_platform",
+    "step_index": 1,
+    "step_description": "Insert cylinder under platform (step 2 of 9)"
+  },
+
+  "world_state_summary": {
+    "step_class": "insert_cylinder_under_platform",
+    "step_confidence": 0.91,
+    "robot": {
+      "is_holding": false,
+      "held_object": null,
+      "gripper_open": true
+    },
+    "objects": {
+      "cylinder_1": {
+        "object_type": "cylinder",
+        "visibility": "visible",
+        "confidence": 0.88,
+        "location_stable": true,
+        "position_world_mm": [291.0, -225.0, 185.0]
+      },
+      "platform_1": {
+        "object_type": "platform",
+        "visibility": "visible",
+        "confidence": 0.82,
+        "location_stable": true,
+        "position_world_mm": [320.0, -180.0, 150.0]
+      }
+    },
+    "kg_relations": []
+  },
+
+  "human_utterance": "幫我拿圓柱",
+
+  "expected": {
+    "routing": "execute_directly",
+    "note": "Explicit object + explicit verb → _is_query_intent()=False → LLMDecisionEngine override",
+    "llm_decision": {
+      "override_skill": "pickup",
+      "override_target": "cylinder_1",
+      "collaboration_policy": null,
+      "clarification_text": null
+    },
+    "waypoints": [
+      {"skill": "pickup", "target": "cylinder_1"},
+      {"skill": "handover", "target": null}
+    ],
+    "robot_verbal_output": "好的，我幫你拿圓柱。"
+  },
+
+  "evaluation_criteria": {
+    "routing_correct": "must reach execute_task(), NOT _handle_query_via_voice_query()",
+    "policy_correct": "collaboration_policy must be null (execute branch)",
+    "skill_correct": "must plan pickup → handover sequence",
+    "safety_check": "gripper must be confirmed empty before pickup",
+    "thesis_relevance": "Demonstrates explicit-command EXECUTE branch: world state confirms feasibility (cylinder visible, hand empty)"
+  },
+
+  "thesis_claim": "The robot autonomously executes assistance when the human command is explicit and the world state confirms feasibility."
+}

@@ -1,0 +1,221 @@
+# ========================================
+# 組裝 SOP / Task Knowledge Dataset
+# ========================================
+# 任務：組裝工件結構
+# 工件：platform, cylinder×4, screw_small×4, bracket, pi, screw_big×2, nut×2, hex_wrench
+# 步驟編號：1-9（連續編號，對應 StepStateMachine 的 confirmed_step）
+# ========================================
+
+task: assemble_workpiece_structure
+description: "組裝完整的工件結構，包含平台基座、支架和PI型工件"
+difficulty: medium
+estimated_time_minutes: 15
+safety_requirements:
+  - "確保工作區域淨空"
+  - "注意螺絲力道避免滑牙"
+
+# ========================================
+# 階段 1: 組裝平台基座（步驟 1-5）
+# ========================================
+phase_1:
+  name: assemble_platform_base
+  description: "使用4個圓柱、1個平台和4個小螺絲組裝基座"
+  required_parts:
+    - type: cylinder
+      quantity: 4
+    - type: platform
+      quantity: 1
+    - type: screw_small
+      quantity: 4
+    - type: hex_wrench
+      quantity: 1
+      note: "工具，用於鎖緊小螺絲"
+  
+  steps:
+    # 步驟 1: 拿平台
+    - id: 1
+      name: pick_platform
+      action: pick_and_place
+      description: "拿平台放到工作區中心"
+      object: platform
+      source: tray
+      destination: work_center
+      robot_help:
+        - "視覺偵測平台位置"
+        - "可協助穩定平台"
+      
+    # 步驟 2: 放置4個圓柱（合併 1.2-1.5）
+    - id: 2
+      name: insert_cylinders
+      action: pick_and_insert
+      description: "放置4個圓柱到平台下方對齊四個孔"
+      object: cylinder
+      quantity: 4
+      source: tray
+      destination: platform.holes
+      direction: from_bottom
+      robot_help:
+        - "視覺偵測圓柱"
+        - "引導對齊孔位"
+        - "依序完成4個圓柱"
+    
+    # 步驟 3: 拿扳手
+    - id: 3
+      name: pick_hex_wrench
+      action: pick_tool
+      description: "拿六角扳手準備鎖螺絲"
+      object: hex_wrench
+      source: tool_area
+      robot_help:
+        - "視覺偵測扳手"
+        - "確認扳手尺寸正確"
+    
+    # 步驟 4: 鎖4個小螺絲（合併 1.7-1.10）
+    - id: 4
+      name: tighten_screws
+      action: screw_tighten
+      description: "用扳手從平台上方鎖4個小螺絲到圓柱"
+      object: screw_small
+      quantity: 4
+      destination: cylinders
+      direction: from_top
+      tools: [hex_wrench]
+      robot_help:
+        - "穩定圓柱防止旋轉"
+        - "對齊螺絲孔"
+        - "依序完成4個螺絲"
+    
+    # 步驟 5: 歸還扳手
+    - id: 5
+      name: return_hex_wrench
+      action: return_tool
+      description: "扳手歸位"
+      object: hex_wrench
+      destination: tool_area
+
+  completion_check:
+    - "4個圓柱固定在平台上"
+    - "4個螺絲都鎖緊"
+
+# ========================================
+# 階段 2: 組裝支架和PI工件（步驟 6-7）
+# ========================================
+phase_2:
+  name: assemble_bracket_pi
+  description: "組裝支架和PI型工件"
+  required_parts:
+    - type: bracket
+      quantity: 1
+    - type: pi
+      quantity: 1
+    - type: screw_big
+      quantity: 1
+    - type: nut
+      quantity: 1
+  
+  steps:
+    # 步驟 6: 組裝支架+PI工件（合併 2.1-2.3）
+    - id: 6
+      name: assemble_bracket_pi
+      action: pick_align_insert
+      description: "拿支架和PI工件，對齊後插入大螺絲"
+      objects: [bracket, pi, screw_big]
+      source: tray
+      destination: work_center
+      robot_help:
+        - "視覺偵測支架和PI工件"
+        - "引導對齊孔位"
+        - "固定組件防止移動"
+        - "引導螺絲穿入"
+    
+    # 步驟 7: 鎖緊螺帽
+    - id: 7
+      name: fasten_nut
+      action: nut_operation
+      description: "在螺絲另一端鎖緊螺帽"
+      object: nut
+      source: tray
+      destination: screw_big.thread_end
+      robot_help:
+        - "視覺偵測螺帽"
+        - "對齊螺紋"
+        - "固定螺絲防止旋轉"
+
+  completion_check:
+    - "支架與PI工件穩固連接"
+    - "大螺絲與螺帽鎖緊"
+
+# ========================================
+# 階段 3: 最終組裝（步驟 8-9）
+# ========================================
+phase_3:
+  name: assemble_final_structure
+  description: "將支架-PI結構與平台基座連接"
+  required_parts:
+    - type: bracket_pi_assembly
+      quantity: 1
+      note: "階段2完成品"
+    - type: platform_base_assembly
+      quantity: 1
+      note: "階段1完成品"
+    - type: screw_big
+      quantity: 1
+    - type: nut
+      quantity: 1
+  
+  steps:
+    # 步驟 8: 對齊並插入大螺絲（合併 3.1-3.2）
+    - id: 8
+      name: align_and_insert_screw
+      action: align_insert
+      description: "把支架PI組裝對齊平台孔位，插入大螺絲"
+      object: bracket_pi_assembly
+      destination: platform_base.bracket_hole
+      robot_help:
+        - "視覺偵測對齊位置"
+        - "穩定平台基座"
+        - "協助對齊孔位"
+        - "引導螺絲插入"
+    
+    # 步驟 9: 鎖螺帽
+    - id: 9
+      name: fasten_final_nut
+      action: tighten_nut
+      description: "在平台上方鎖螺帽"
+      object: nut
+      source: tray
+      destination: screw_big
+      direction: from_top
+      robot_help:
+        - "固定螺絲防止旋轉"
+        - "協助對齊螺紋"
+
+  completion_check:
+    - "整體結構組裝完成"
+    - "所有連接處穩固"
+
+# ========================================
+# 知識補充說明
+# ========================================
+knowledge_notes:
+  part_identification:
+    cylinder: "圓柱形立柱，有螺絲孔"
+    platform: "底板，四角有安裝孔，中央有支架安裝孔"
+    bracket: "L型或直型支架，有安裝孔"
+    pi: "PI字型工件（非電子產品），有通孔"
+    screw_small: "小型螺絲，用於固定圓柱"
+    screw_big: "大型螺絲，用於主要結構連接"
+    nut: "螺帽，與大螺絲配合"
+    hex_wrench: "六角扳手，用於鎖小螺絲"
+  
+  common_mistakes:
+    - "忘記確認零件方向"
+    - "螺絲過度鎖緊導致滑牙"
+    - "孔位對齊不精確"
+    - "未固定底部組件導致移位"
+  
+  tips:
+    - "先輕輕鎖入螺絲，確認對齊後再完全鎖緊"
+    - "使用雙手或工具固定組件避免移動"
+    - "定期檢查垂直度和水平度"
+    - "按對角線順序鎖緊多個螺絲以確保均勻受力"

@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ws-racr"
+version = "1.0.0"
+description = "Human-robot collaborative assembly: world-state perception, memory-augmented LLM planning and a three-layer collaborative decision policy on a TM5-900 arm"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Szu-Nien Chi", email = "szunienchi1@gmail.com" }]
+dependencies = [
+    "numpy",
+    "pyyaml",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+# Camera / vision stack (YOLOv8-seg, MediaPipe, TSM-ResNet18, RealSense)
+perception = [
+    "opencv-python",
+    "scipy",
+    "torch",
+    "torchvision",
+    "ultralytics>=8.3",
+    "mediapipe==0.10.14",
+    "pyrealsense2>=2.50",
+]
+# LLM planner and sentence embeddings (plan RAG)
+llm = [
+    "openai>=1.99",
+    "sentence-transformers>=5.1",
+]
+# PostgreSQL + pgvector persistence
+db = [
+    "sqlalchemy>=2.0",
+    "psycopg2-binary",
+    "alembic",
+]
+# Speech in / out
+voice = [
+    "SpeechRecognition",
+    "sounddevice",
+    "edge-tts",
+    "gTTS",
+    "pygame",
+    "pyttsx3",
+    "pypinyin",
+]
+# Offline tests and evaluation (CPU only, no hardware, no API key)
+dev = [
+    "pytest",
+    "pyflakes",
+    "sqlalchemy>=2.0",
+]
+all = ["ws-racr[perception,llm,db,voice,dev]"]
+
+[project.scripts]
+hrc_system = "ws_racr.app.main:main"
+ws-racr = "ws_racr.app.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"ws_racr.database" = ["*.yaml", "*.json", "alembic.ini", "alembic/*.py", "alembic/*.mako", "alembic/versions/*.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+addopts = "-q"

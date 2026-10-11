@@ -1,0 +1,81 @@
+# Full (GPU + hardware) environment used for the thesis experiments.
+# Create it from the repository root:  conda env create -f environment.yml
+# The offline tests and evaluation do NOT need this: see docs/setup.md ("Offline quick start").
+name: ws_racr
+channels:
+  - nvidia
+  - conda-forge
+  - pytorch
+  - defaults
+dependencies:
+  # Core Python packages
+  - python=3.10.14
+  - numpy=2.2.6
+  - pandas=2.3.2
+  - scipy=1.15.3
+  
+  # CUDA Toolkit and Deep Learning Backend
+  - cuda-toolkit=12.4.1
+  - cuda-nvcc=12.4.131
+  - cuda-libraries=12.9.1
+  - cudnn=9.13.0.50
+  
+  # Computer Vision and Image Processing  
+  - opencv-python=4.12.0
+  - pillow=11.1.0
+  
+  # Machine Learning and Deep Learning
+  - pytorch=2.3.1
+  - torchvision=0.18.1
+  
+  # Geometric processing
+  - shapely=2.1.1
+  
+  # Web framework for image service
+  - flask=3.1.2
+  - waitress>=2.0.0
+  
+  # Data formats
+  - pyyaml=6.0.3
+  - yaml=0.2.5
+  
+  # Visualization
+  - matplotlib=3.10.6
+  
+  # Development and testing
+  - pytest=8.4.2
+  - pytest-cov=6.0.0
+  
+  # System and utility
+  - setuptools>=50.0.0
+  - wheel>=0.36.0
+  
+  # Packages that need pip
+  - pip
+  - pip:
+    # Computer Vision and Sensors
+    - mediapipe==0.10.14
+    - pyrealsense2>=2.50.0
+    - opencv-contrib-python==4.8.1.78
+    
+    # Deep Learning and AI
+    - ultralytics==8.3.181
+    - ultralytics-thop==2.0.14
+    - einops>=0.3.0
+    
+    # LLM and NLP
+    - openai==1.99.9
+    - langchain-openai==0.3.31
+    - sentence-transformers==5.1.2
+    
+    # Database
+    - sqlalchemy==2.0.43
+    - psycopg2-binary==2.9.11
+    
+    # Testing utilities
+    - pytest-repeat==0.9.4
+    - pytest-rerunfailures==16.0.1
+    - pydocstyle>=6.0.0
+
+    # This repository (editable install; run conda env create from the repo root)
+    - -e .

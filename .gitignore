@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Secrets and local config (only .env.example is tracked)
+.env
+!.env.example
+
+# Models, weights, checkpoints, local databases
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.db
+*.sqlite3
+checkpoints/
+runs/
+
+# Raw recordings
+*.mp4
+*.avi
+*.bag
+
+# ROS2 build artifacts
+build/
+install/
+log/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

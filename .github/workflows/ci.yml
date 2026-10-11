@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      # CPU only, no secrets, no ROS, no database server, no GPU.
+      # The [dev] extra pulls numpy, pyyaml, python-dotenv, sqlalchemy, pytest, pyflakes.
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Byte-compile
+        run: python -m compileall -q src evaluation tests tools training
+
+      - name: Unit tests
+        run: pytest -q
+
+      - name: Offline experiments
+        run: python -m evaluation.run_all

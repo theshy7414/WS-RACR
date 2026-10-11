@@ -1,0 +1,70 @@
+{
+  "scenario_id": "ask_ambiguous_assist_01",
+  "branch": "ask_human",
+  "description": "Human issues an ambiguous help request with no explicit target object. Multiple candidates are visible. Robot must not hallucinate an action — it should ask for clarification.",
+
+  "assembly_context": {
+    "step_class": "place_bracket_on_table",
+    "step_index": 3,
+    "step_description": "Place bracket on table (step 4 of 9)"
+  },
+
+  "world_state_summary": {
+    "step_class": "place_bracket_on_table",
+    "step_confidence": 0.85,
+    "robot": {
+      "is_holding": false,
+      "held_object": null,
+      "gripper_open": true
+    },
+    "objects": {
+      "bracket_1": {
+        "object_type": "bracket",
+        "visibility": "visible",
+        "confidence": 0.86,
+        "location_stable": true,
+        "position_world_mm": [305.0, -210.0, 160.0]
+      },
+      "hex_wrench_1": {
+        "object_type": "hex_wrench",
+        "visibility": "visible",
+        "confidence": 0.79,
+        "location_stable": true,
+        "position_world_mm": [270.0, -250.0, 158.0]
+      },
+      "screw_big_1": {
+        "object_type": "screw_big",
+        "visibility": "visible",
+        "confidence": 0.73,
+        "location_stable": true,
+        "position_world_mm": [290.0, -195.0, 157.0]
+      }
+    },
+    "kg_relations": []
+  },
+
+  "human_utterance": "幫我一下",
+
+  "expected": {
+    "routing": "execute_task()",
+    "note": "No explicit object → _is_query_intent()=False but LLMDecisionEngine sees ambiguity → ask_human",
+    "llm_decision": {
+      "override_skill": null,
+      "override_target": null,
+      "collaboration_policy": "ask_human",
+      "clarification_text": "你需要我拿支架還是扳手？"
+    },
+    "waypoints": [],
+    "robot_verbal_output": "你需要我拿支架還是扳手？"
+  },
+
+  "evaluation_criteria": {
+    "routing_correct": "must reach execute_task() → LLMDecisionEngine → ask_human branch",
+    "policy_correct": "collaboration_policy must be 'ask_human'",
+    "no_hallucination": "robot must NOT attempt pickup when intent is ambiguous",
+    "clarification_specific": "clarification_text must reference the candidate objects (bracket / hex_wrench)",
+    "thesis_relevance": "Demonstrates ASK policy: robot avoids hallucination when intent is ambiguous, requests minimal human clarification"
+  },
+
+  "thesis_claim": "When human intent is ambiguous and multiple candidate objects exist, the robot refrains from guessing and requests targeted clarification."
+}
